@@ -26,62 +26,80 @@ function draw() {
 }
 
 function shimmer(random_index) {
-	// go out for 300 to 900, come back for 500 to 700 (slightly lighter?), go away for 200 to 500, come back on
+	// Turn the rectangle to a thrid color, but let it shimmer a little first
 
-	if (shimmering_rects.indexOf(random_index) === -1) {
+	var random_rect = rectangles[random_index];
 
-		shimmering_rects.push(random_index);
+	if (shimmering_rects.indexOf(random_rect.id) === -1) {
 
-		fill(color_shimmer_transition);
-		stroke(color_shimmer_transition);
-		rect(rectangles[random_index].next_x, rectangles[random_index].next_y, rectangles[random_index].w, rectangles[random_index].h);
+		shimmering_rects.push(random_rect.id);
 
-		window.setTimeout(function() {
-			fill(color_shimmer);
-			stroke(color_shimmer);
-			rect(rectangles[random_index].next_x, rectangles[random_index].next_y, rectangles[random_index].w, rectangles[random_index].h);
-		}, 50);
+		// Flicker at least once
 
-		window.setTimeout(function() {
-			fill(color_shimmer_transition);
-			stroke(color_shimmer_transition);
-			rect(rectangles[random_index].next_x, rectangles[random_index].next_y, rectangles[random_index].w, rectangles[random_index].h);
-		}, 260);
+		// And flicker up to two more times
+		var flicker_times = get_rand_int(0, 3);
 
-		window.setTimeout(function() {
-			fill(color_shimmer);
-			stroke(color_shimmer);
-			rect(rectangles[random_index].next_x, rectangles[random_index].next_y, rectangles[random_index].w, rectangles[random_index].h);
-		}, 360);
+		if (flicker_times == 0) {
 
-		window.setTimeout(function() {
-			fill(color_shimmer_transition);
-			stroke(color_shimmer_transition);
-			rect(rectangles[random_index].next_x, rectangles[random_index].next_y, rectangles[random_index].w, rectangles[random_index].h);
-		}, 400);
+			set_shimmer_callback(color_shimmer, random_index, 0, 0);
 
-		window.setTimeout(function() {
-			fill(color_shimmer);
-			stroke(color_shimmer);
-			rect(rectangles[random_index].next_x, rectangles[random_index].next_y, rectangles[random_index].w, rectangles[random_index].h);
-		}, 500);
+		} else if (flicker_times == 1) {
 
+			set_shimmer_callback(color_shimmer_transition, random_index, 0, 0);
+			set_shimmer_callback(color_shimmer, random_index, 30, 70);
+
+		} else if (flicker_times == 2) {
+			set_shimmer_callback(color_shimmer_transition, random_index, 0, 0);
+			set_shimmer_callback(color_shimmer, random_index, 30, 70);
+
+			set_shimmer_callback(color_shimmer_transition, random_index, 70, 110);
+			set_shimmer_callback(color_shimmer, random_index, 110, 140);
+
+		} else if (flicker_times == 3) {
+
+			set_shimmer_callback(color_shimmer_transition, random_index, 0, 0);
+			set_shimmer_callback(color_shimmer, random_index, 30, 70);
+			set_shimmer_callback(color_shimmer_transition, random_index, 70, 110);
+			set_shimmer_callback(color_shimmer, random_index, 110, 140);
+			set_shimmer_callback(color_shimmer_transition, random_index, 240, 280);
+			set_shimmer_callback(color_shimmer, random_index, 340, 380);
+			set_shimmer_callback(color_shimmer_transition, random_index, 380, 420);
+			set_shimmer_callback(color_shimmer, random_index, 480, 600);
+
+		}
 	}
 }
 
+function set_shimmer_callback(fill_color, index, duration_min, duration_max) {
+	// A little helper to aid us set the man callbacks we use
+	// in the shimmer effect
+
+	window.setTimeout(function() {
+			fill(fill_color);
+			stroke(fill_color);
+			rect(rectangles[index].next_x, rectangles[index].next_y,
+				 rectangles[index].w, rectangles[index].h);
+		}, get_rand_int(duration_min, duration_max)
+	);
+}
+
 function remove_shimmer() {
-	// Once we get to 25% shimmering, let's remove some
+	// Once we get to 8% shimmering, let's remove some
 
-	if (shimmering_rects.length > .25 * rectangles.length) {
-		console.log('removing shimmer');
-		var random_shimmering_rect_index = get_rand_int(0, rectangles.length);
+	if (shimmering_rects.length > .01 * rectangles.length) {
+		var random_shimmering_rect_index = get_rand_int(0, shimmering_rects.length);
 
-		fill(rectangles[random_shimmering_rect_index].fill_color);
-		stroke(rectangles[random_shimmering_rect_index].fill_color);
+		for (var i=0, len=rectangles.length; i < len; i++) {
 
-		rect(rectangles[random_shimmering_rect_index].next_x, rectangles[random_shimmering_rect_index].next_y,
-			rectangles[random_shimmering_rect_index].w, rectangles[random_shimmering_rect_index].h);
+			if (rectangles[i].id === shimmering_rects[random_shimmering_rect_index]) {
+				fill(rectangles[i].fill_color);
+				stroke(rectangles[i].fill_color);
 
+				rect(rectangles[i].next_x, rectangles[i].next_y,
+					 rectangles[i].w, rectangles[i].h);
+			}
+
+		}
 		delete shimmering_rects[random_shimmering_rect_index];
 	}
 }
@@ -106,7 +124,9 @@ function draw_grid() {
 				current_color = color_a;
 			}
 
-			rectangles.push({'next_x': next_x, 'next_y': next_y, 'w': 20, 'h': next_height, 'fill_color': current_color});
+			rectangles.push({'id': get_rand_int(0, 1000000), 'next_x': next_x,
+							 'next_y': next_y, 'w': 20, 'h': next_height,
+							 'fill_color': current_color});
 			next_y += next_height;
 			next_height = get_rand_int(30, 70);
 		}
