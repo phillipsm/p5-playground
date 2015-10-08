@@ -3,8 +3,10 @@ var shimmering_rects = [];
 
 var color_a = '#4FB477';
 var color_b = '#FFC4EB';
-var color_shimmer = '#6890E7';
-var color_shimmer_transition = '#b1c6f3';
+var color_shimmer = '#ffd700';
+var color_shimmer_transition = '#ffec88';
+//var color_shimmer = '#6890E7';
+//var color_shimmer_transition = '#b1c6f3';
 var color_background = '#f3f5fb';
 
 
