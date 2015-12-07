@@ -1,0 +1,23 @@
+#counter-panel {
+	position: fixed;
+	bottom: 50;
+	right: 80;
+	z-index: 1000;
+	display: none;
+}
+
+#counter-panel p {
+	color: #999;
+	font-family: ‘Palatino Linotype’, ‘Book Antiqua’, Palatino, serif;
+}
+
+#counter-panel p.count {
+	font-size: 200px;
+	line-height: 140px;
+	color: #999;
+	text-align: center;
+}
+
+#counter-panel p.count-description {
+	font-size: 17px;
+}
