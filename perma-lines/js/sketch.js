@@ -2,17 +2,17 @@
 function setup() {
     createCanvas(windowWidth, windowHeight);
 	stroke(150);
-	frameRate(.03); // set a low framerate so we don't DOS our API
-	redraw();
+	vis.get_archives(500);
+	setInterval(function() { vis.get_archives(500); }, 60000);
+	noLoop();
 }
 
 function draw() {
-	vis.get_archives(500);
-	vis.hide_box();
 }
 
 function mouseMoved() {
 	vis.show_box();
+	setTimeout(vis.hide_box, 2000);
 }
 
 function mouseClicked() {
@@ -28,7 +28,7 @@ function mouseClicked() {
 // p5's functions end //
 
 
-// keep all of our vis config and logic here
+// keep all of our vis config, data, and logic here
 var vis = {};
 
 // store global variables here
@@ -36,8 +36,9 @@ vis.config = {
 	 	perma_archives_api_url: 'https://api.perma.cc/v1/public/archives/',
 	 	perma_archives_base_url: 'https://perma.cc/',
 	 	perma_archives: {},
-	 	box_displayed_at: Date.now()
-	 }
+	 	box_displayed_at: Date.now(),
+	 	today: moment().date()
+}
 
 // we hit the Perma API for recent archives and add them to a
 // list if we haven't seen them before.
@@ -49,9 +50,14 @@ vis.get_archives = function(limit) {
 	    dataType: "jsonp",
 
 	    success: function(response) {
-	    	var now = moment().date();
+	    	
+	    	// if we just crossed midnight, reset our list of archives
+	    	if (moment().date() !== vis.config.today) {
+	    		perma.config.perma_archives = {};
+	    	}
+
 	        $.each(response.objects, function(index, value) {
-				var created_today = now === moment(value.creation_timestamp).date();
+				var created_today = vis.config.today === moment(value.creation_timestamp).date();
 	        	if (!(value.guid in vis.config.perma_archives) && created_today) {
 					vis.config.perma_archives[value.guid] = {};
 				}
@@ -64,7 +70,6 @@ vis.get_archives = function(limit) {
 
 // draw lines on the canvas for new archives
 vis.draw_lines = function() {
-
 	$.each(vis.config.perma_archives, function(key, value) {
 
 		if (!('point_1' in value)) {
@@ -78,14 +83,14 @@ vis.draw_lines = function() {
 			line(point_1.x, point_1.y, point_2.x, point_2.y);
 
 			var archive_count = Object.keys(vis.config.perma_archives).length;
-			var archive_count_message = (archive_count == 1 ? 'archive today' : 'archives today');
+			var archive_count_message = (archive_count === 1 ? 'archive today' : 'archives today');
 			$('#counter-panel p.count').html(archive_count);
 			$('#counter-panel .count-description p').html(archive_count_message);
 		}
 	});
 }
 
-// return a point that's close to the point that's passed in
+// return a random point that's near, but not too close, to the point that's passed in
 vis.get_close_point = function(starting_point) {
 	var nearby_point = {'x': 0, 'y': 0};
 	var distance = Math.sqrt( (nearby_point.x-starting_point.x) * (nearby_point.x-starting_point.x) + 
@@ -142,10 +147,8 @@ vis.is_point_in_line = function(mouse_x, mouse_y) {
 
 // hides our info box after the mouse isn't moved for a little while
 vis.hide_box = function() {
-	if (Date.now() - vis.config.box_displayed_at > 3000) {
 		$('#counter-panel').hide(300);
 		$('body').css('cursor', 'none');
-	}
 }
 
 // shows our info box
@@ -157,12 +160,10 @@ vis.show_box = function() {
 	}
 }
 
-
-// a simple helper that returns a random integer
+// a simple helper function that returns a random integer
 vis.get_random_int  = function(min, max) {
 	return Math.floor(Math.random() * (max - min)) + min;
 }
-
 
 // a helper function to get a list of all values between start and end
 vis.range = function(start, end) {
